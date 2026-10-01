@@ -72,11 +72,17 @@ class SsoController extends Controller
             ->throw()
             ->json();
 
-        // Sinkronkan pengguna lokal berdasarkan ID dari SSO.
-        $user = User::updateOrCreate(
-            ['sso_id' => $ssoUser['id']],
-            ['name' => $ssoUser['name'], 'email' => $ssoUser['email']],
-        );
+        // Cari pengguna lokal berdasarkan ID SSO; jika belum tertaut, cocokkan dengan email
+        // agar akun lama (yang dibuat sebelum memakai SSO) tersambung, bukan terduplikasi.
+        $user = User::where('sso_id', $ssoUser['id'])->first()
+            ?? User::where('email', $ssoUser['email'])->first()
+            ?? new User;
+
+        $user->forceFill([
+            'sso_id' => $ssoUser['id'],
+            'name' => $ssoUser['name'],
+            'email' => $ssoUser['email'],
+        ])->save();
 
         Auth::login($user);
         $request->session()->regenerate();

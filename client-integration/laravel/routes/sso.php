@@ -11,8 +11,8 @@ Route::get('/auth/sso/redirect', [SsoController::class, 'redirect'])->name('sso.
 Route::get('/auth/sso/callback', [SsoController::class, 'callback'])->name('sso.callback');
 Route::post('/logout', [SsoController::class, 'logout'])->name('logout');
 
-// Semua halaman yang membutuhkan login:
-Route::middleware(EnsureSsoSession::class)->group(function () {
+// Semua halaman yang membutuhkan login (atau daftarkan EnsureSsoSession di grup middleware "web"):
+Route::middleware(['auth', EnsureSsoSession::class])->group(function () {
     Route::get('/', fn () => view('welcome'))->name('home');
     // Route::get('/dashboard', ...);
 });
