@@ -1,0 +1,144 @@
+/* Halaman login, daftar & verifikasi email. */
+:root {
+    --auth-navy: #0f172a;
+    --auth-blue: #0b5cab;
+    --auth-link: #0b5cab;
+    --auth-muted: #64748b;
+    --auth-border: #dbe2ea;
+    --auth-field: #f8fafc;
+}
+
+body { background: #fff; }
+
+.auth-shell { min-height: 100vh; display: flex; flex-direction: column; position: relative; }
+.auth-shell::before {
+    /* Garis tiga warna logo SSO di tepi atas. */
+    content: ""; position: absolute; inset: 0 0 auto; height: 4px; z-index: 5;
+    background: linear-gradient(90deg, #1e88e5 0 33.3%, #7cb342 33.3% 66.6%, #fb8c00 66.6%);
+}
+
+/* ---------- Panel kiri ---------- */
+.auth-hero {
+    position: relative; overflow: hidden; color: #fff; text-align: center;
+    display: flex; align-items: center; justify-content: center;
+    padding: 2.5rem 1rem 2rem;
+    background:
+        radial-gradient(rgba(255, 255, 255, .09) 1px, transparent 1px) 0 0 / 22px 22px,
+        linear-gradient(135deg, #1d4ed8 0%, #075e9c 45%, #1e40af 100%);
+}
+.auth-hero-content { position: relative; z-index: 1; max-width: 680px; }
+.auth-logo {
+    width: 220px; max-width: 70%; height: auto;
+    /* Latar logo hitam: dibuat menyatu dengan panel biru. */
+    mix-blend-mode: screen;
+}
+.auth-hero-title {
+    font-family: "Lexend", "Inter", sans-serif; font-weight: 600; letter-spacing: -.02em;
+    font-size: 1.5rem; margin: .75rem 0 .5rem; text-shadow: 0 2px 12px rgba(0, 0, 0, .25);
+}
+.auth-hero-text { display: none; color: rgba(255, 255, 255, .85); line-height: 1.7; margin: 0; }
+.auth-hero-points {
+    display: none; list-style: none; padding: 0; margin: 1.75rem 0 0;
+    flex-wrap: wrap; justify-content: center; gap: .6rem;
+}
+.auth-hero-points li {
+    display: inline-flex; align-items: center; gap: .45rem;
+    padding: .45rem .9rem; border-radius: 999px; font-size: .85rem; font-weight: 500;
+    background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .2);
+}
+
+.auth-deco { position: absolute; pointer-events: none; border: 1px solid rgba(255, 255, 255, .14); }
+.auth-deco-circle-1 { width: 160px; height: 160px; border-radius: 50%; left: 8%; top: 12%; }
+.auth-deco-circle-2 { width: 320px; height: 320px; border-radius: 50%; left: 30%; bottom: -160px; }
+.auth-deco-diamond { width: 48px; height: 48px; transform: rotate(45deg); right: 14%; top: 22%; border-color: rgba(255, 255, 255, .25); }
+
+/* ---------- Panel kanan ---------- */
+.auth-panel {
+    position: relative; overflow: hidden; flex: 1;
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: 2rem 1rem 2.5rem; background: #fff;
+}
+.auth-panel-deco {
+    position: absolute; width: 280px; height: 280px; right: -60px; bottom: -60px;
+    border-radius: 48px; background: #f6f8fb; pointer-events: none;
+}
+.auth-form { position: relative; z-index: 1; width: 100%; max-width: 448px; }
+
+.auth-title {
+    font-family: "Lexend", "Inter", sans-serif; font-weight: 600; letter-spacing: -.02em;
+    font-size: 1.75rem; color: var(--auth-navy); margin-bottom: .35rem;
+}
+.auth-subtitle { color: var(--auth-muted); margin-bottom: 1.75rem; }
+
+.auth-form .form-label,
+.auth-label {
+    font-size: .75rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+    color: #475569; margin-bottom: .45rem;
+}
+.auth-link { color: var(--auth-link); font-weight: 600; font-size: .85rem; text-decoration: none; }
+.auth-link:hover { text-decoration: underline; }
+
+/* Input dengan ikon di dalam kotak. */
+.auth-field { position: relative; }
+.auth-field > .bi:first-child {
+    position: absolute; left: 1.1rem; top: 50%; transform: translateY(-50%);
+    color: #94a3b8; font-size: 1.05rem; pointer-events: none;
+}
+.auth-field .form-control { padding-left: 3rem; }
+.auth-field .auth-field-action {
+    position: absolute; right: .5rem; top: 50%; transform: translateY(-50%);
+    border: 0; background: transparent; color: #64748b; padding: .4rem .6rem; border-radius: .5rem;
+}
+.auth-field .auth-field-action:hover { color: var(--auth-navy); background: #eef2f7; }
+.auth-field:has(.auth-field-action) .form-control { padding-right: 3rem; }
+
+.auth-form .form-control {
+    height: 3.25rem; border-radius: .75rem; border: 1px solid var(--auth-border);
+    background: var(--auth-field); color: var(--auth-navy); font-size: .95rem;
+}
+.auth-form .form-control:focus {
+    background: #fff; border-color: #60a5fa; box-shadow: 0 0 0 .25rem rgba(37, 99, 235, .12);
+}
+.auth-form .form-control.is-invalid { border-color: #dc3545; }
+/* Halaman daftar masih memakai input-group Bootstrap: samakan tampilannya. */
+.auth-form .input-group-text { border-radius: .75rem 0 0 .75rem; background: var(--auth-field); border-color: var(--auth-border); color: #94a3b8; }
+.auth-form .input-group > .form-control { border-radius: 0 .75rem .75rem 0; }
+.auth-form .form-text { font-size: .8rem; color: var(--auth-muted); }
+
+.auth-form .form-check-input { width: 1.2rem; height: 1.2rem; margin-top: .1rem; border-color: #94a3b8; }
+.auth-form .form-check-input:checked { background-color: var(--auth-navy); border-color: var(--auth-navy); }
+.auth-form .form-check-label { color: #334155; font-size: .9rem; margin-left: .25rem; }
+
+.auth-form .btn-primary {
+    height: 3.5rem; border-radius: .75rem; border: 0; font-weight: 600; font-size: 1rem;
+    background: var(--auth-navy); box-shadow: 0 10px 22px rgba(15, 23, 42, .22);
+}
+.auth-form .btn-primary:hover,
+.auth-form .btn-primary:focus { background: #1e293b; }
+.auth-form .alert { border-radius: .75rem; font-size: .9rem; }
+
+.auth-help {
+    margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;
+    text-align: center; font-size: .85rem; color: var(--auth-muted);
+}
+.auth-help .fw-semibold { color: var(--auth-link); }
+
+/* ---------- Tablet ke atas ---------- */
+@media (min-width: 576px) {
+    .auth-hero { padding: 3rem 2rem 2.5rem; }
+    .auth-hero-title { font-size: 1.85rem; }
+    .auth-hero-text { display: block; font-size: .95rem; }
+    .auth-panel { padding: 2.5rem 2rem 3rem; }
+}
+
+/* ---------- Desktop: dua kolom ---------- */
+@media (min-width: 992px) {
+    .auth-shell { flex-direction: row; }
+    .auth-hero { flex: 0 0 55%; padding: 3rem; min-height: 100vh; }
+    .auth-logo { width: 300px; }
+    .auth-hero-title { font-size: 2.6rem; margin-top: 1rem; }
+    .auth-hero-text { font-size: 1.1rem; }
+    .auth-hero-points { display: flex; }
+    .auth-panel { align-items: center; padding: 3rem; }
+    .auth-title { font-size: 2.1rem; }
+}
