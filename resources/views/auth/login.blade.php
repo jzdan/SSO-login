@@ -9,13 +9,14 @@
     @csrf
 
     <div class="mb-3">
-        <label for="email" class="form-label fw-medium">Email</label>
+        <label for="login" class="form-label fw-medium">NIP atau Email</label>
         <div class="input-group">
-            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-            <input type="email" id="email" name="email" value="{{ old('email') }}"
-                   class="form-control @error('email') is-invalid @enderror"
-                   placeholder="nama@contoh.com" required autofocus autocomplete="username">
+            <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+            <input type="text" id="login" name="login" value="{{ old('login') }}"
+                   class="form-control @error('login') is-invalid @enderror"
+                   placeholder="NIP lama / NIP baru / email" required autofocus autocomplete="username">
         </div>
+        <div class="form-text">NIP lama (9 digit), NIP baru (12 digit), email BPS, atau email Google.</div>
     </div>
 
     <div class="mb-3">

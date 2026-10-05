@@ -21,7 +21,7 @@
         <form method="GET" class="d-flex gap-2" role="search">
             <div class="input-group input-group-sm" style="min-width: 240px">
                 <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-                <input type="search" name="q" value="{{ $search }}" class="form-control" placeholder="Cari nama atau email">
+                <input type="search" name="q" value="{{ $search }}" class="form-control" placeholder="Cari nama, NIP, atau email">
             </div>
             @if ($search)
                 <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-light">Reset</a>
@@ -50,7 +50,10 @@
                                         {{ $user->name }}
                                         @if (auth()->user()->is($user))<span class="badge badge-soft-secondary ms-1">Anda</span>@endif
                                     </div>
-                                    <small class="text-body-secondary">{{ $user->email }}</small>
+                                    <small class="text-body-secondary d-block">{{ $user->email }}@if ($user->email_bps) · {{ $user->email_bps }}@endif</small>
+                                    @if ($user->nip_lama || $user->nip_baru)
+                                        <small class="text-body-secondary">NIP {{ collect([$user->nip_lama, $user->nip_baru])->filter()->implode(' / ') }}</small>
+                                    @endif
                                 </div>
                             </div>
                         </td>
@@ -62,11 +65,16 @@
                             @endif
                         </td>
                         <td>
-                            @if ($user->is_active)
-                                <span class="badge badge-soft-success"><span class="status-dot bg-success me-1"></span>Aktif</span>
-                            @else
-                                <span class="badge badge-soft-danger"><span class="status-dot bg-danger me-1"></span>Nonaktif</span>
-                            @endif
+                            @switch ($user->status())
+                                @case('aktif')
+                                    <span class="badge badge-soft-success"><span class="status-dot bg-success me-1"></span>Aktif</span>
+                                    @break
+                                @case('belum_verifikasi')
+                                    <span class="badge badge-soft-warning"><span class="status-dot bg-warning me-1"></span>Belum verifikasi</span>
+                                    @break
+                                @default
+                                    <span class="badge badge-soft-danger"><span class="status-dot bg-danger me-1"></span>Nonaktif</span>
+                            @endswitch
                         </td>
                         <td class="small text-body-secondary">{{ $user->last_login_at?->diffForHumans() ?? 'Belum pernah' }}</td>
                         <td class="text-end text-nowrap">

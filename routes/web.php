@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DashboardController;
@@ -13,6 +14,13 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisterController::class, 'create'])->name('register');
     Route::post('/register', [RegisterController::class, 'store'])->middleware('throttle:10,1');
 });
+
+// Verifikasi email: dibuka dari link di email, bisa dalam keadaan belum login.
+Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
+Route::post('/email/verification-notification', [EmailVerificationController::class, 'send'])
+    ->middleware('throttle:3,1')->name('verification.send');
+Route::get('/email/verify/{user}/{type}/{hash}', [EmailVerificationController::class, 'verify'])
+    ->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
 
 // Single logout: dipanggil dari aplikasi klien (GET) atau dari tombol logout SSO (POST).
 Route::get('/logout', [LoginController::class, 'clientLogout'])->name('logout.client');
@@ -32,5 +40,6 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::patch('clients/{client}/toggle', [Admin\ClientController::class, 'toggle'])->name('clients.toggle');
 
         Route::resource('users', Admin\UserController::class)->except('show');
+        Route::post('users/{user}/verification', [Admin\UserController::class, 'sendVerification'])->name('users.verification');
     });
 });

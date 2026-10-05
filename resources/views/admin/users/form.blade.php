@@ -26,15 +26,39 @@
                 <div class="card-header"><h2 class="card-title"><i class="bi bi-person me-1 text-primary"></i> Data akun</h2></div>
                 <div class="card-body">
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-12">
                             <label class="form-label fw-medium" for="name">Nama <span class="text-danger">*</span></label>
                             <input class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', $user->name) }}" required>
                             @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-medium" for="email">Email <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email', $user->email) }}" required>
-                            @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <label class="form-label fw-medium" for="nip_lama">NIP lama</label>
+                            <input class="form-control @error('nip_lama') is-invalid @enderror" id="nip_lama" name="nip_lama" value="{{ old('nip_lama', $user->nip_lama) }}" inputmode="numeric" maxlength="9" placeholder="9 digit">
+                            @error('nip_lama')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium" for="nip_baru">NIP baru</label>
+                            <input class="form-control @error('nip_baru') is-invalid @enderror" id="nip_baru" name="nip_baru" value="{{ old('nip_baru', $user->nip_baru) }}" inputmode="numeric" maxlength="12" placeholder="12 digit">
+                            @error('nip_baru')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        @foreach (['email' => ['Email Google', true, 'nama@gmail.com'], 'email_bps' => ['Email BPS', false, 'nama@bps.go.id']] as $field => [$label, $required, $placeholder])
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium" for="{{ $field }}">
+                                    {{ $label }} @if ($required)<span class="text-danger">*</span>@endif
+                                    @if ($user->exists && $user->{$field})
+                                        @if ($user->emailIsVerified($field))
+                                            <span class="badge badge-soft-success ms-1">Terverifikasi</span>
+                                        @else
+                                            <span class="badge badge-soft-warning ms-1">Belum verifikasi</span>
+                                        @endif
+                                    @endif
+                                </label>
+                                <input type="email" class="form-control @error($field) is-invalid @enderror" id="{{ $field }}" name="{{ $field }}" value="{{ old($field, $user->{$field}) }}" placeholder="{{ $placeholder }}" @required($required)>
+                                @error($field)<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                        @endforeach
+                        <div class="col-12">
+                            <div class="form-text mt-0">Pengguna bisa login memakai NIP lama, NIP baru, email BPS, atau email Google. Mengganti email akan mereset status verifikasinya.</div>
                         </div>
                     </div>
                 </div>
@@ -81,6 +105,22 @@
                 </div>
             </div>
 
+            <div class="card mb-4">
+                <div class="card-header"><h2 class="card-title"><i class="bi bi-envelope-check me-1 text-primary"></i> Verifikasi email</h2></div>
+                <div class="card-body">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="mark_verified" name="mark_verified" value="1" @checked(old('mark_verified'))>
+                        <label class="form-check-label fw-medium" for="mark_verified">Tandai email sudah terverifikasi</label>
+                        <div class="form-text mt-0">Hanya untuk email yang Anda yakini milik pengguna (mis. dari data kepegawaian). Jika tidak dicentang, link verifikasi dikirim ke email pengguna.</div>
+                    </div>
+                    @if ($user->exists && $user->unverifiedEmailColumns())
+                        <button type="submit" form="send-verification" class="btn btn-sm btn-outline-primary w-100 mt-3">
+                            <i class="bi bi-send me-1"></i> Kirim ulang link verifikasi
+                        </button>
+                    @endif
+                </div>
+            </div>
+
             <div class="d-grid gap-2">
                 <button class="btn btn-primary py-2"><i class="bi bi-check-lg me-1"></i> Simpan</button>
                 <a href="{{ route('admin.users.index') }}" class="btn btn-light py-2">Batal</a>
@@ -88,4 +128,8 @@
         </div>
     </div>
 </form>
+
+@if ($user->exists)
+    <form method="POST" action="{{ route('admin.users.verification', $user) }}" id="send-verification" class="d-none">@csrf</form>
+@endif
 @endsection

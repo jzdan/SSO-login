@@ -17,13 +17,36 @@
         </div>
     </div>
 
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6">
+            <label for="nip_lama" class="form-label fw-medium">NIP lama <span class="text-body-secondary fw-normal">(opsional)</span></label>
+            <input type="text" id="nip_lama" name="nip_lama" value="{{ old('nip_lama') }}" inputmode="numeric" maxlength="9"
+                   class="form-control @error('nip_lama') is-invalid @enderror" placeholder="9 digit">
+        </div>
+        <div class="col-sm-6">
+            <label for="nip_baru" class="form-label fw-medium">NIP baru <span class="text-body-secondary fw-normal">(opsional)</span></label>
+            <input type="text" id="nip_baru" name="nip_baru" value="{{ old('nip_baru') }}" inputmode="numeric" maxlength="12"
+                   class="form-control @error('nip_baru') is-invalid @enderror" placeholder="12 digit">
+        </div>
+    </div>
+
     <div class="mb-3">
-        <label for="email" class="form-label fw-medium">Email</label>
+        <label for="email" class="form-label fw-medium">Email Google</label>
         <div class="input-group">
             <span class="input-group-text"><i class="bi bi-envelope"></i></span>
             <input type="email" id="email" name="email" value="{{ old('email') }}"
-                   class="form-control @error('email') is-invalid @enderror" placeholder="nama@contoh.com" required autocomplete="username">
+                   class="form-control @error('email') is-invalid @enderror" placeholder="nama@gmail.com" required autocomplete="username">
         </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="email_bps" class="form-label fw-medium">Email BPS <span class="text-body-secondary fw-normal">(opsional)</span></label>
+        <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-building"></i></span>
+            <input type="email" id="email_bps" name="email_bps" value="{{ old('email_bps') }}"
+                   class="form-control @error('email_bps') is-invalid @enderror" placeholder="nama@bps.go.id">
+        </div>
+        <div class="form-text">Link verifikasi akan dikirim ke setiap email yang diisi.</div>
     </div>
 
     <div class="row g-3 mb-4">

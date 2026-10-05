@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
@@ -26,12 +26,19 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-        ]);
+        User::normalizeIdentityInput($request);
 
-        $user->update($data);
+        // NIP hanya bisa diubah admin, karena dipakai sebagai identitas login.
+        $rules = collect(User::identityRules($user))->only(['name', 'email', 'email_bps'])->all();
+        $user->fill($request->validate($rules, User::identityMessages()));
+
+        $emailChanged = $user->isDirty(array_keys(User::EMAIL_COLUMNS));
+        $user->resetChangedEmailVerification();
+        $user->save();
+
+        if ($emailChanged && $user->sendEmailVerifications()) {
+            return back()->with('status', 'Profil berhasil diperbarui. Link verifikasi telah dikirim ke email yang baru.');
+        }
 
         return back()->with('status', 'Profil berhasil diperbarui.');
     }

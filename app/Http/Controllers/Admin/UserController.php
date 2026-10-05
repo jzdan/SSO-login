@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
@@ -19,7 +18,10 @@ class UserController extends Controller
         $users = User::query()
             ->when($search, fn ($q) => $q->where(fn ($q) => $q
                 ->where('name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%")))
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('email_bps', 'like', "%{$search}%")
+                ->orWhere('nip_lama', 'like', "%{$search}%")
+                ->orWhere('nip_baru', 'like', "%{$search}%")))
             ->orderBy('name')
             ->paginate(15)
             ->withQueryString();
@@ -34,9 +36,10 @@ class UserController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        User::create($this->validated($request));
+        $user = User::create($this->validated($request));
 
-        return redirect()->route('admin.users.index')->with('status', 'Pengguna berhasil ditambahkan.');
+        return redirect()->route('admin.users.index')
+            ->with('status', 'Pengguna berhasil ditambahkan. '.$this->handleVerification($request, $user));
     }
 
     public function edit(User $user): View
@@ -58,13 +61,49 @@ class UserController extends Controller
             unset($data['password']);
         }
 
-        $user->update($data);
+        $user->fill($data);
+        $emailChanged = $user->isDirty(array_keys(User::EMAIL_COLUMNS));
+        $user->resetChangedEmailVerification();
+        $user->save();
 
         if (! $user->is_active) {
             $user->revokeAllTokens();
         }
 
-        return redirect()->route('admin.users.index')->with('status', 'Pengguna berhasil diperbarui.');
+        $note = $emailChanged || $request->boolean('mark_verified') ? ' '.$this->handleVerification($request, $user) : '';
+
+        return redirect()->route('admin.users.index')->with('status', 'Pengguna berhasil diperbarui.'.$note);
+    }
+
+    public function sendVerification(User $user): RedirectResponse
+    {
+        $sent = $user->sendEmailVerifications();
+
+        return back()->with('status', $sent
+            ? "Link verifikasi dikirim ke {$sent} alamat email."
+            : 'Semua email pengguna ini sudah terverifikasi.');
+    }
+
+    /**
+     * Admin bisa langsung menandai email terverifikasi (mis. data pegawai dari kepegawaian);
+     * jika tidak, link verifikasi dikirim ke email yang belum terverifikasi.
+     */
+    private function handleVerification(Request $request, User $user): string
+    {
+        if ($request->boolean('mark_verified')) {
+            foreach (User::EMAIL_COLUMNS as $column => $verifiedAt) {
+                if ($user->{$column} && ! $user->{$verifiedAt}) {
+                    $user->{$verifiedAt} = now();
+                }
+            }
+            $user->save();
+
+            return 'Email ditandai sudah terverifikasi.';
+        }
+
+        return $user->sendEmailVerifications()
+            ? 'Link verifikasi telah dikirim ke email pengguna.'
+            : '';
     }
 
     public function destroy(Request $request, User $user): RedirectResponse
@@ -79,11 +118,11 @@ class UserController extends Controller
 
     private function validated(Request $request, ?User $user = null): array
     {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user?->id)],
+        User::normalizeIdentityInput($request);
+
+        $data = $request->validate(User::identityRules($user) + [
             'password' => [$user ? 'nullable' : 'required', 'confirmed', Password::defaults()],
-        ]);
+        ], User::identityMessages());
 
         return $data + [
             'is_admin' => $request->boolean('is_admin'),

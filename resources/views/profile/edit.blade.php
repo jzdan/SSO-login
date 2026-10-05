@@ -32,19 +32,47 @@
                     @csrf
                     @method('PUT')
                     <div class="row g-3 mb-3">
-                        <div class="col-md-6">
+                        <div class="col-12">
                             <label class="form-label fw-medium" for="name">Nama</label>
                             <input class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', $user->name) }}" required>
                             @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-medium" for="email">Email</label>
-                            <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email', $user->email) }}" required>
-                            @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <label class="form-label fw-medium" for="nip_lama">NIP lama</label>
+                            <input class="form-control" id="nip_lama" value="{{ $user->nip_lama ?? '-' }}" disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium" for="nip_baru">NIP baru</label>
+                            <input class="form-control" id="nip_baru" value="{{ $user->nip_baru ?? '-' }}" disabled>
+                        </div>
+                        @foreach (['email' => ['Email Google', true, 'nama@gmail.com'], 'email_bps' => ['Email BPS', false, 'nama@bps.go.id']] as $field => [$label, $required, $placeholder])
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium" for="{{ $field }}">
+                                    {{ $label }}
+                                    @if ($user->{$field})
+                                        @if ($user->emailIsVerified($field))
+                                            <span class="badge badge-soft-success ms-1">Terverifikasi</span>
+                                        @else
+                                            <span class="badge badge-soft-warning ms-1">Belum verifikasi</span>
+                                        @endif
+                                    @endif
+                                </label>
+                                <input type="email" class="form-control @error($field) is-invalid @enderror" id="{{ $field }}" name="{{ $field }}" value="{{ old($field, $user->{$field}) }}" placeholder="{{ $placeholder }}" @required($required)>
+                                @error($field)<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                        @endforeach
+                        <div class="col-12">
+                            <div class="form-text mt-0">NIP hanya bisa diubah oleh administrator. Email yang diganti harus diverifikasi ulang lewat link yang dikirim ke email baru.</div>
                         </div>
                     </div>
-                    <button class="btn btn-primary"><i class="bi bi-check-lg me-1"></i> Simpan perubahan</button>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-primary"><i class="bi bi-check-lg me-1"></i> Simpan perubahan</button>
+                        @if ($user->unverifiedEmailColumns())
+                            <button type="submit" form="send-verification" class="btn btn-outline-primary"><i class="bi bi-send me-1"></i> Kirim ulang link verifikasi</button>
+                        @endif
+                    </div>
                 </form>
+                <form method="POST" action="{{ route('verification.send') }}" id="send-verification" class="d-none">@csrf</form>
             </div>
         </div>
 

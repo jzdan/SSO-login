@@ -115,8 +115,8 @@ class SsoFlowTest extends TestCase
     {
         User::factory()->create(['email' => 'off@test.id', 'is_active' => false]);
 
-        $this->post('/login', ['email' => 'off@test.id', 'password' => 'password'])
-            ->assertSessionHasErrors('email');
+        $this->post('/login', ['login' => 'off@test.id', 'password' => 'password'])
+            ->assertSessionHasErrors('login');
         $this->assertGuest();
     }
 
@@ -134,7 +134,7 @@ class SsoFlowTest extends TestCase
     {
         $admin = User::factory()->create(['email' => 'admin@test.id', 'is_admin' => true]);
 
-        $this->post('/login', ['email' => 'admin@test.id', 'password' => 'password'])->assertRedirect(route('dashboard'));
+        $this->post('/login', ['login' => 'admin@test.id', 'password' => 'password'])->assertRedirect(route('dashboard'));
         $this->assertDatabaseHas('login_activities', ['user_id' => $admin->id]);
 
         $this->get('/')

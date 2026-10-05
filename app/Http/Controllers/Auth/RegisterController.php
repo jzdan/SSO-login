@@ -3,11 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\LoginActivity;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
@@ -24,18 +22,18 @@ class RegisterController extends Controller
     {
         abort_unless(config('sso.allow_registration'), 404);
 
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+        User::normalizeIdentityInput($request);
+
+        $data = $request->validate(User::identityRules() + [
             'password' => ['required', 'confirmed', Password::defaults()],
-        ]);
+        ], User::identityMessages());
 
-        $user = User::create($data + ['last_login_at' => now()]);
+        // Belum langsung login: email harus diverifikasi dulu, agar orang tidak bisa
+        // mendaftar memakai email milik orang lain.
+        $user = User::create($data);
+        $user->sendEmailVerifications();
+        $request->session()->put('verification_user_id', $user->id);
 
-        Auth::login($user);
-        $request->session()->regenerate();
-        LoginActivity::record($user, $request);
-
-        return redirect()->intended(route('dashboard'));
+        return redirect()->route('verification.notice');
     }
 }

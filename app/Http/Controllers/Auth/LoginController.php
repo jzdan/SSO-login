@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\LoginActivity;
 use App\Models\Passport\Client;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,31 +23,47 @@ class LoginController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'string', 'email'],
+        $request->validate([
+            'login' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ]);
 
-        $throttleKey = Str::transliterate(Str::lower($request->input('email')).'|'.$request->ip());
+        $login = Str::lower(trim($request->input('login')));
+        $column = User::loginColumn($login);
+        $throttleKey = Str::transliterate(Str::lower($login).'|'.$request->ip());
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             throw ValidationException::withMessages([
-                'email' => 'Terlalu banyak percobaan login. Coba lagi dalam '.RateLimiter::availableIn($throttleKey).' detik.',
+                'login' => 'Terlalu banyak percobaan login. Coba lagi dalam '.RateLimiter::availableIn($throttleKey).' detik.',
             ]);
         }
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (! Auth::attempt([$column => $login, 'password' => $request->input('password')], $request->boolean('remember'))) {
             RateLimiter::hit($throttleKey);
 
-            throw ValidationException::withMessages(['email' => 'Email atau password salah.']);
+            throw ValidationException::withMessages(['login' => 'NIP/email atau password salah.']);
         }
 
         RateLimiter::clear($throttleKey);
+        $user = Auth::user();
 
-        if (! Auth::user()->is_active) {
+        if (! $user->is_active) {
             Auth::logout();
 
-            throw ValidationException::withMessages(['email' => 'Akun Anda telah dinonaktifkan. Hubungi administrator.']);
+            throw ValidationException::withMessages(['login' => 'Akun Anda telah dinonaktifkan. Hubungi administrator.']);
+        }
+
+        // Login dengan alamat email tertentu mengharuskan email itu sudah diverifikasi;
+        // login dengan NIP mengharuskan minimal satu email akun sudah diverifikasi.
+        $verified = in_array($column, array_keys(User::EMAIL_COLUMNS), true)
+            ? $user->emailIsVerified($column)
+            : $user->hasAnyVerifiedEmail();
+
+        if (! $verified) {
+            Auth::logout();
+            $request->session()->put('verification_user_id', $user->id);
+
+            return redirect()->route('verification.notice');
         }
 
         $request->session()->regenerate();
